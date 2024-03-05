@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./App.css";
+import axios from "axios";
 
 function App() {
   const [voto, setVoto] = useState("");
@@ -11,8 +12,39 @@ function App() {
   const [pcp, setPcp] = useState(0);
   const [l, setL] = useState(0);
   const [nulo, setNulo] = useState(0);
+  const [nif, setNif] = useState("");
+  const [idade, setIdade] = useState(null);
+  const [podeVotar, setPodeVotar] = useState(false);
+
+  useEffect(() => {
+    async function fetchEleitor() {
+      try {
+        const response = await axios.get(
+          `http://localhost:3001/eleitores/${nif}`
+        );
+        const eleitor = response.data;
+        if (eleitor) {
+          setIdade(eleitor.idade);
+          setPodeVotar(eleitor.idade >= 18);
+          console.log("idade:", idade);
+        }
+      } catch (error) {
+        console.error("Erro ao recuperar os eleitores:", error);
+        setPodeVotar(false);
+      }
+    }
+
+    if (nif) {
+      fetchEleitor();
+    }
+  }, [nif]);
 
   const handleVotar = () => {
+    if (!podeVotar) {
+      alert("Você não pode votar pois é menor de 18 anos.");
+      return;
+    }
+
     switch (voto.toLowerCase()) {
       case "ps":
         setPs(ps + 1);
@@ -44,19 +76,40 @@ function App() {
     setVoto("");
   };
 
+  const renderizarVotacao = () => {
+    if (idade < 18) {
+      return <p>Você tem menos de 18 anos e ainda não pode votar.</p>;
+    } else {
+      return (
+        <div>
+          <label htmlFor="voto">Digite o partido em que deseja votar:</label>
+          <input
+            type="text"
+            id="voto"
+            value={voto}
+            onChange={(e) => setVoto(e.target.value)}
+          />
+          <button onClick={handleVotar}>Votar</button>
+        </div>
+      );
+    }
+  };
+
   return (
     <div className="App">
       <h1>Eleições 2024</h1>
       <h4>Votação para Primeiro Ministro de Portugal</h4>
 
-      <label htmlFor="voto">Digite o partido em que deseja votar:</label>
+      <label htmlFor="nif">Digite seu NIF:</label>
       <input
-        type="text"
-        id="voto"
-        value={voto}
-        onChange={(e) => setVoto(e.target.value)}
+        type="number"
+        id="nif"
+        value={nif}
+        onChange={(e) => setNif(e.target.value)}
       />
-      <button onClick={handleVotar}>Votar</button>
+      <button>Verificar</button>
+
+      {renderizarVotacao()}
 
       <div id="resultado">
         <h2>Resultados</h2>
