@@ -1,0 +1,28 @@
+{
+  "eleitores": [
+    {
+      "id": 1,
+      "nome": "João",
+      "idade": 30,
+      "NIF": 750
+    },
+    {
+      "id": 2,
+      "nome": "Pedro",
+      "idade": 15,
+      "NIF": 125
+    },
+    {
+      "id": 3,
+      "nome": "Ana",
+      "idade": 28,
+      "NIF": 512
+    },
+    {
+      "id": 4,
+      "nome": "Mariana",
+      "idade": 22,
+      "NIF": 987
+    }
+  ]
+}
