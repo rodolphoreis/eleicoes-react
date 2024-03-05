@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from "react";
 import "./App.css";
 import axios from "axios";
+import Modal from "@mui/material/Modal";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import Button from "@mui/material/Button";
 
 function App() {
   const [voto, setVoto] = useState("");
@@ -15,22 +19,28 @@ function App() {
   const [nif, setNif] = useState("");
   const [idade, setIdade] = useState(null);
   const [podeVotar, setPodeVotar] = useState(false);
+  const [openModal, setOpenModal] = useState(false);
 
   useEffect(() => {
     async function fetchEleitor() {
       try {
-        const response = await axios.get(
-          `http://localhost:3001/eleitores/${nif}`
+        const response = await axios.get(`http://localhost:3001/eleitores`);
+        const eleitores = response.data;
+
+        const eleitor = eleitores.find(
+          (eleitor) => eleitor.NIF === parseInt(nif)
         );
-        const eleitor = response.data;
         if (eleitor) {
           setIdade(eleitor.idade);
+
           setPodeVotar(eleitor.idade >= 18);
-          console.log("idade:", idade);
+        } else {
+          console.log("Eleitor não encontrado.");
         }
       } catch (error) {
         console.error("Erro ao recuperar os eleitores:", error);
         setPodeVotar(false);
+      } finally {
       }
     }
 
@@ -77,9 +87,13 @@ function App() {
   };
 
   const renderizarVotacao = () => {
-    if (idade < 18) {
+    if (!nif) {
+      return null;
+    } else if (idade === null) {
+      return <p>Verificando idade...</p>;
+    } else if (idade < 18) {
       return <p>Você tem menos de 18 anos e ainda não pode votar.</p>;
-    } else {
+    } else if (podeVotar) {
       return (
         <div>
           <label htmlFor="voto">Digite o partido em que deseja votar:</label>
@@ -92,7 +106,17 @@ function App() {
           <button onClick={handleVotar}>Votar</button>
         </div>
       );
+    } else {
+      return <p>Você não foi encontrado na lista de eleitores.</p>;
     }
+  };
+
+  const handleOpenModal = () => {
+    setOpenModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setOpenModal(false);
   };
 
   return (
@@ -107,21 +131,43 @@ function App() {
         value={nif}
         onChange={(e) => setNif(e.target.value)}
       />
-      <button>Verificar</button>
 
       {renderizarVotacao()}
 
-      <div id="resultado">
-        <h2>Resultados</h2>
-        <p>Número de votos para o PS: {ps}</p>
-        <p>Número de votos para o PSD: {psd}</p>
-        <p>Número de votos para o CH: {ch}</p>
-        <p>Número de votos para o IL: {il}</p>
-        <p>Número de votos para o BE: {be}</p>
-        <p>Número de votos para o PCP: {pcp}</p>
-        <p>Número de votos para o L: {l}</p>
-        <p>Número de votos nulos: {nulo}</p>
-      </div>
+      <Modal
+        open={openModal}
+        onClose={handleCloseModal}
+        aria-labelledby="modal-title"
+        aria-describedby="modal-description"
+      >
+        <Box sx={{ width: 400, bgcolor: "background.paper", p: 2 }}>
+          <Typography id="modal-title" variant="h6" component="h2">
+            Resultados
+          </Typography>
+          <Typography id="modal-description" sx={{ mt: 2 }}>
+            Número de votos para o PS: {ps}
+            <br />
+            Número de votos para o PSD: {psd}
+            <br />
+            Número de votos para o CH: {ch}
+            <br />
+            Número de votos para o IL: {il}
+            <br />
+            Número de votos para o BE: {be}
+            <br />
+            Número de votos para o PCP: {pcp}
+            <br />
+            Número de votos para o L: {l}
+            <br />
+            Número de votos nulos: {nulo}
+            <br />
+          </Typography>
+        </Box>
+      </Modal>
+
+      {podeVotar ? (
+        <Button onClick={handleOpenModal}>Ver Resultados</Button>
+      ) : null}
     </div>
   );
 }
